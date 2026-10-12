@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiet Web</title>
+  <link rel="stylesheet" href="popup.css">
+  <script defer src="shared.js"></script>
+  <script defer src="popup.js"></script>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">✦</span>
+      <div>
+        <h1>Quiet Web</h1>
+        <p>Keep the useful parts.</p>
+      </div>
+    </div>
+    <label class="switch" title="Enable or disable Quiet Web everywhere">
+      <input id="global-switch" type="checkbox" checked aria-label="Enable extension">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <main>
+    <section class="site-panel">
+      <div class="site-row">
+        <div>
+          <span class="eyebrow">THIS WEBSITE</span>
+          <strong id="site-name">Loading…</strong>
+        </div>
+        <label class="switch" title="Turn Quiet Web on or off for this website">
+          <input id="site-switch" type="checkbox" checked aria-label="Enable for website">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button class="primary" id="pick-button" type="button">＋  Hide an element</button>
+      <p class="helper">Click the button, then click anything on the page. Press Esc to cancel.</p>
+    </section>
+
+    <section id="presets-section">
+      <h2>Ready-made filters</h2>
+      <div id="presets"></div>
+    </section>
+
+    <section>
+      <h2>Elements you've hidden <span id="rule-count" class="muted"></span></h2>
+      <div id="rules"></div>
+    </section>
+
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+  </main>
+  <footer>Private by design · Settings are kept in this browser</footer>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Quiet Web — Hide Distractions",
+  "version": "1.0.0",
+  "description": "Hide unwanted page elements with a click. Includes LinkedIn and YouTube presets.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "quiet-web@akantsevoi.github.io",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Quiet Web",
+    "default_popup": "src/popup.html",
+    "default_icon": "icons/icon.svg"
+  },
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/shared.js", "src/content.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ]
+}
