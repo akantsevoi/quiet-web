@@ -1,4 +1,4 @@
-# Quiet Web — Hide Distractions (Firefox)
+# Quiet Web — Hide Distractions & Schedule Website Blocks (Firefox)
 
 A lightweight Firefox WebExtension that removes UI clutter locally in your browser.
 
@@ -18,6 +18,37 @@ A lightweight Firefox WebExtension that removes UI clutter locally in your brows
 5. Click **Hide an element**, move your cursor over the unwanted part of a page, and click to hide it. Press `Esc` to cancel.
 
 **Important:** Temporary add-ons are removed when Firefox restarts. To install persistently, the extension must be signed via Mozilla Add-ons (AMO). This repository includes the Firefox Manifest V3 Gecko ID and the required no-data-collection declaration for distribution.
+
+## Website blocking (v1.1.0)
+
+Open the toolbar popup, scroll to **Website blocking**, and enter a domain such as `youtube.com`.
+Select **Scheduled** and enter start/end times and selected weekdays, or choose **All day**.
+Use **Edit**, **Remove**, or the per-rule checkbox to manage a block. All times use
+the Firefox computer's **local timezone** (including daylight-saving changes).
+
+By default, YouTube and its subdomains are **blocked every day from 00:00 (inclusive)
+until 13:00 (exclusive)**. You can edit, disable, or remove this starter rule.
+Existing tabs show a full-screen blocker; new navigations are blocked with Firefox's
+`declarativeNetRequest` rules. Rule updates are checked approximately once per minute.
+When Firefox is suspended, alarms may run late; schedule enforcement is best-effort
+and is not tamper-proof. Closing/disabled Firefox or uninstalling the extension
+bypasses the blocks. Once the end time is reached, refresh a navigation that
+Firefox previously blocked to open it again.
+
+Overnight schedules are supported: a Monday 22:00–06:00 block lasts until Tuesday
+06:00 even if Tuesday is not selected. Equal start and end times are rejected;
+use **All day** instead. All website and element rules are local to the browser.
+
+**Permissions:** `declarativeNetRequest` blocks navigations to specified domains,
+`alarms` keeps schedules updated, and `storage` saves settings. The extension
+does not send browsing activity to an external server.
+
+## Manual element selectors
+
+In the popup under **Manual element rules**, add a domain and a CSS selector
+(e.g. `reddit.com` and `#right-sidebar`). Custom element rules apply to the exact
+hostname, unlike site blocks which include subdomains. You can undo them from
+the corresponding website's element list.
 
 ## Presets (initial state)
 

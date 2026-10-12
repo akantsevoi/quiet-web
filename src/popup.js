@@ -12,6 +12,114 @@
     ruleCount: document.getElementById("rule-count"),
     message: document.getElementById("message")
   };
+
+  let editingBlock = null;
+  function renderBlocks() {
+    const container = document.getElementById("site-blocks");
+    container.replaceChildren();
+    for (const block of settings.siteBlocks) {
+      const row = document.createElement("div");
+      row.className = "item";
+      const label = document.createElement("div");
+      label.className = "label";
+      const title = document.createElement("strong");
+      title.textContent = block.domain;
+      const status = document.createElement("p");
+      const isOn = globalThis.QuietWeb.blockIsActive(block);
+      status.className = "block-status" + (isOn && settings.enabled ? " active" : "");
+      status.textContent = block.mode === "always" ?
+        "All day · " + block.days.length + " day(s) · " + (isOn && settings.enabled ? "Blocked now" : "Inactive") :
+        block.start + "–" + block.end + " · " + block.days.length + " day(s) · " +
+        (isOn && settings.enabled ? "Blocked now" : "Inactive");
+      label.append(title, status);
+      const actions = document.createElement("div");
+      actions.className = "block-actions";
+      const toggle = document.createElement("input");
+      toggle.type = "checkbox";
+      toggle.checked = block.enabled;
+      toggle.title = "Enable/disable block";
+      toggle.setAttribute("aria-label", "Enable block for " + block.domain);
+      toggle.addEventListener("change", () => {
+        saveSettings({...settings,siteBlocks:settings.siteBlocks.map(b =>
+          b.id === block.id ? {...b,enabled:toggle.checked} : b)}).catch(displayError);
+      });
+      const edit = document.createElement("button");
+      edit.type = "button"; edit.textContent = "Edit";
+      edit.addEventListener("click", () => {
+        editingBlock = block.id;
+        document.getElementById("block-domain").value = block.domain;
+        document.getElementById("block-mode").value = block.mode;
+        document.getElementById("block-start").value = block.start;
+        document.getElementById("block-end").value = block.end;
+        for(const input of document.querySelectorAll("#block-weekdays input")) {
+          input.checked = block.days.includes(Number(input.value));
+        }
+        document.getElementById("block-save").textContent = "Save changes";
+        document.getElementById("block-cancel").hidden = false;
+        adjustBlockMode();
+      });
+      const del = document.createElement("button");
+      del.type="button";del.textContent="Remove";
+      del.addEventListener("click", () =>
+        saveSettings({...settings,siteBlocks:settings.siteBlocks.filter(b => b.id !== block.id)})
+          .then(resetBlockForm).catch(displayError)
+      );
+      actions.append(toggle,edit,del);row.append(label,actions);container.append(row);
+    }
+  }
+  function adjustBlockMode() {
+    document.getElementById("block-times").hidden =
+      document.getElementById("block-mode").value === "always";
+  }
+  function resetBlockForm() {
+    editingBlock=null;
+    document.getElementById("block-form").reset();
+    document.getElementById("block-save").textContent="Add website block";
+    document.getElementById("block-cancel").hidden=true;
+    adjustBlockMode();
+  }
+  document.getElementById("block-mode").addEventListener("change", adjustBlockMode);
+  document.getElementById("block-cancel").addEventListener("click",resetBlockForm);
+  document.getElementById("block-form").addEventListener("submit", async(event)=>{
+    event.preventDefault();
+    elements.message.textContent="";
+    const domain=globalThis.QuietWeb.normalizeDomain(document.getElementById("block-domain").value);
+    const mode=document.getElementById("block-mode").value;
+    const start=document.getElementById("block-start").value;
+    const end=document.getElementById("block-end").value;
+    const days=[...document.querySelectorAll("#block-weekdays input:checked")].map(input=>Number(input.value));
+    if(!domain || !days.length || (mode==="scheduled" && (!start || !end || start===end))) {
+      elements.message.textContent="Enter a valid domain, select days, and choose different start/end times.";
+      return;
+    }
+    const existing=settings.siteBlocks.find(b=>b.id===editingBlock);
+    const block=globalThis.QuietWeb.normalizeSiteBlock({
+      id: editingBlock || "site-"+Date.now()+"-"+Math.random().toString(36).slice(2,6),
+      domain, mode,start,end,days,enabled:existing ? existing.enabled : true
+    });
+    if(!block){elements.message.textContent="Invalid website block.";return;}
+    const next=settings.siteBlocks.filter(b=>b.id!==editingBlock);
+    next.push(block);
+    try{await saveSettings({...settings,siteBlocks:next});resetBlockForm();}
+    catch(error){displayError(error);}
+  });
+  document.getElementById("selector-form").addEventListener("submit",async(event)=>{
+    event.preventDefault();
+    const domain=globalThis.QuietWeb.normalizeDomain(document.getElementById("selector-domain").value);
+    const selector=document.getElementById("selector-value").value.trim();
+    if(!domain || !globalThis.QuietWeb.safeSelector(selector)) {
+      elements.message.textContent="Enter a valid domain and CSS selector.";return;
+    }
+    try{ document.querySelector(selector); }
+    catch{elements.message.textContent="Invalid CSS selector.";return;}
+    try{
+      await saveSettings({...settings,rules:[...settings.rules,{id:"rule-"+Date.now(),
+        hostname:domain,selector,label:"Manual rule",createdAt:Date.now()}]});
+      document.getElementById("selector-form").reset();
+      elements.message.textContent="Element rule saved for "+domain+".";
+    }catch(error){displayError(error);}
+  });
+
   let tabId = null;
   let hostname = null;
   let settings = normalizeSettings();
@@ -112,6 +220,7 @@
     elements.pickButton.disabled = !settings.enabled || settings.pausedHosts.includes(hostname);
     renderPresets();
     renderRules();
+    renderBlocks();
   }
 
   elements.globalSwitch.addEventListener("change", () =>

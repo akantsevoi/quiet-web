@@ -107,6 +107,74 @@
       !selector.includes("/*") && !selector.includes("*/");
   }
 
+
+  const WEEKDAYS = Object.freeze([0, 1, 2, 3, 4, 5, 6]);
+  const DEFAULT_BLOCK = Object.freeze({
+    id: "youtube-morning", domain: "youtube.com", mode: "scheduled",
+    start: "00:00", end: "13:00", days: [...WEEKDAYS], enabled: true
+  });
+
+  function normalizeDomain(value) {
+    if (typeof value !== "string" || !value.trim()) return null;
+    let host;
+    try {
+      const url = new URL(value.includes("://") ? value.trim() : `https://${value.trim()}`);
+      if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.port) return null;
+      host = url.hostname.toLowerCase().replace(/\.$/, "");
+    } catch { return null; }
+    if (host.length > 253 || !host.includes(".")) return null;
+    const labels = host.split(".");
+    return labels.every((label) => label.length <= 63 &&
+      /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(label)) ? host : null;
+  }
+
+  function validTime(value) {
+    return typeof value === "string" &&
+      /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value);
+  }
+
+  function normalizeSiteBlock(block) {
+    if (!block || typeof block !== "object") return null;
+    const domain = normalizeDomain(block.domain);
+    const mode = block.mode === "always" ? "always" : "scheduled";
+    const start = validTime(block.start) ? block.start : "00:00";
+    const end = validTime(block.end) ? block.end : "13:00";
+    const days = Array.isArray(block.days) ?
+      [...new Set(block.days.filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))] :
+      [...WEEKDAYS];
+    if (!domain || days.length === 0 || (mode === "scheduled" && start === end)) return null;
+    return {
+      id: typeof block.id === "string" && block.id ? block.id : `site-${domain}`,
+      domain, mode, start, end, days, enabled: block.enabled !== false
+    };
+  }
+
+  function minutes(time) {
+    return Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  }
+
+  // Days denote the day an interval starts. Overnight blocks continue into
+  // the next morning, even if that next weekday wasn't selected.
+  function blockIsActive(block, now = new Date()) {
+    if (!block.enabled) return false;
+    const day = now.getDay();
+    if (block.mode === "always") return block.days.includes(day);
+    const current = now.getHours() * 60 + now.getMinutes();
+    const start = minutes(block.start);
+    const end = minutes(block.end);
+    if (start < end) {
+      return block.days.includes(day) && current >= start && current < end;
+    }
+    return (block.days.includes(day) && current >= start) ||
+      (block.days.includes((day + 6) % 7) && current < end);
+  }
+
+  function matchingSiteBlock(settings, hostname, now = new Date()) {
+    if (!settings.enabled) return null;
+    return settings.siteBlocks.find((block) =>
+      hostnameMatches(hostname, block.domain) && blockIsActive(block, now)) || null;
+  }
+
   function normalizeSettings(value) {
     const input = value && typeof value === "object" ? value : {};
     return {
@@ -119,7 +187,11 @@
         rule && typeof rule === "object" &&
         typeof rule.id === "string" &&
         typeof rule.hostname === "string" &&
-        safeSelector(rule.selector)) : []
+        safeSelector(rule.selector)) : [],
+      // Missing on upgrade: seed the explicitly requested YouTube morning block once.
+      // An explicit empty array means the user deleted it; never restore it.
+      siteBlocks: (Array.isArray(input.siteBlocks) ? input.siteBlocks : [DEFAULT_BLOCK])
+        .map(normalizeSiteBlock).filter(Boolean).slice(0, 100)
     };
   }
 
@@ -141,6 +213,11 @@
 
   globalThis.QuietWeb = Object.freeze({
     PRESETS,
+    WEEKDAYS,
+    normalizeDomain,
+    normalizeSiteBlock,
+    blockIsActive,
+    matchingSiteBlock,
     hostnameMatches,
     presetAppliesToPage,
     safeSelector,

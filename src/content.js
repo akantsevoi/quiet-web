@@ -3,6 +3,7 @@
 
   const { normalizeSettings, activeSelectors, safeSelector } = globalThis.QuietWeb;
   const STYLE_ID = "quiet-web-style";
+  const BLOCK_ID = "quiet-web-block-screen";
   const hostname = location.hostname.toLowerCase();
   let settings = normalizeSettings();
   let lastUrl = location.href;
@@ -22,12 +23,42 @@
   function applyRules() {
     const style = ensureStyle();
     if (!style) return;
+    applySiteBlock();
     const selectors = activeSelectors(settings, hostname, location.pathname);
     const css = selectors.filter(safeSelector)
       .map((selector) => `${selector} { display: none !important; }`)
       .join("\n");
     if (style.textContent !== css) style.textContent = css;
   }
+
+
+  function applySiteBlock() {
+    const block = globalThis.QuietWeb.matchingSiteBlock(settings, hostname);
+    const existing = document.getElementById(BLOCK_ID);
+    if (!block) {
+      existing?.remove();
+      return;
+    }
+    if (!document.documentElement || existing) return;
+    const cover = document.createElement("div");
+    cover.id = BLOCK_ID;
+    cover.setAttribute("role", "alert");
+    Object.assign(cover.style, {
+      position: "fixed", inset: "0", zIndex: "2147483646",
+      background: "#142a35", color: "#fff", display: "grid",
+      placeItems: "center", textAlign: "center",
+      font: "18px/1.5 system-ui, sans-serif"
+    });
+    const content = document.createElement("div");
+    const title = document.createElement("h1");
+    title.textContent = "Quiet Web · Website blocked";
+    const detail = document.createElement("p");
+    detail.textContent = block.domain + " is blocked by your schedule. Open the Quiet Web toolbar menu to edit the rule.";
+    content.append(title,detail);cover.append(content);
+    document.documentElement.append(cover);
+  }
+  // Refresh active tabs at schedule boundaries even without navigating.
+  setInterval(applySiteBlock, 15000);
 
   async function loadSettings() {
     try {

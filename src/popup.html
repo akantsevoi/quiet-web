@@ -39,6 +39,39 @@
       <p class="helper">Click the button, then click anything on the page. Press Esc to cancel.</p>
     </section>
 
+<section id="block-section">
+  <h2>Website blocking</h2>
+  <p class="helper">Blocks apply to the domain and its subdomains. Times follow your computer's local clock.</p>
+  <div id="site-blocks"></div>
+  <form id="block-form" class="block-form">
+    <label>Domain or URL<input id="block-domain" type="text" placeholder="youtube.com" required></label>
+    <label>Block mode<select id="block-mode"><option value="scheduled">Scheduled</option><option value="always">All day</option></select></label>
+    <div class="time-row" id="block-times">
+      <label>From<input id="block-start" type="time" value="00:00" required></label>
+      <label>Until<input id="block-end" type="time" value="13:00" required></label>
+    </div>
+    <fieldset id="block-weekdays"><legend>Days the block starts</legend>
+      <label><input type="checkbox" value="1" checked>Mon</label>
+      <label><input type="checkbox" value="2" checked>Tue</label>
+      <label><input type="checkbox" value="3" checked>Wed</label>
+      <label><input type="checkbox" value="4" checked>Thu</label>
+      <label><input type="checkbox" value="5" checked>Fri</label>
+      <label><input type="checkbox" value="6" checked>Sat</label>
+      <label><input type="checkbox" value="0" checked>Sun</label>
+    </fieldset>
+    <button type="submit" class="primary" id="block-save">Add website block</button>
+    <button type="button" id="block-cancel" hidden>Cancel edit</button>
+  </form>
+</section>
+<section id="selector-section">
+  <h2>Manual element rules</h2>
+  <p class="helper">Add a CSS selector without using the click-to-hide picker.</p>
+  <form id="selector-form" class="block-form">
+    <label>Domain<input id="selector-domain" type="text" placeholder="reddit.com" required></label>
+    <label>CSS selector<input id="selector-value" type="text" placeholder="#right-sidebar" required></label>
+    <button type="submit" class="primary">Add element rule</button>
+  </form>
+</section>
     <section id="presets-section">
       <h2>Ready-made filters</h2>
       <div id="presets"></div>

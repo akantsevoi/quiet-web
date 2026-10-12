@@ -35,3 +35,15 @@ footer { border-top: 1px solid #e1e8eb; padding: 10px 16px; text-align: center; 
 .switch input:checked + .slider { background: #17a994; }
 .switch input:checked + .slider::before { transform: translateX(14px); }
 .switch input:focus-visible + .slider { outline: 2px solid #2b88dd; outline-offset: 2px; }
+
+.block-form{background:#fff;border:1px solid #e1e8eb;border-radius:9px;padding:12px;display:grid;gap:9px;margin-top:10px}
+.block-form label{display:grid;gap:4px;font-size:11px;font-weight:600;color:#4c6470}
+.block-form input:not([type=checkbox]),.block-form select{width:100%;padding:8px;border:1px solid #cad5da;border-radius:6px;background:#fff;color:#20343f;font:inherit}
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+fieldset{border:1px solid #e1e8eb;border-radius:6px;padding:8px;display:flex;flex-wrap:wrap;gap:5px}
+legend{font-size:11px;color:#627780}
+fieldset label{display:flex!important;align-items:center;gap:2px!important;font-size:10px!important}
+.block-status{font-size:11px;color:#607b85}
+.block-status.active{color:#b13b4a;font-weight:700}
+.block-actions{display:flex;gap:5px}
+.block-actions button,#block-cancel{font-size:11px;border:1px solid #ccd9dd;background:#fff;border-radius:5px;padding:5px;cursor:pointer}
